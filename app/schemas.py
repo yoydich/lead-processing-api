@@ -1,15 +1,41 @@
 import re
 from typing import Literal
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class LeadIn(BaseModel):
-    name: str | None = None
-    email: str | None = None
-    phone: str | None = None
-    company: str | None = None
-    message: str
-    source: str = "landing"
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "name": "Ivan Petrov",
+                    "email": " Ivan.Petrov@Acme.io ",
+                    "phone": "+38 (067) 123-45-67",
+                    "company": "Acme UA",
+                    "message": (
+                        "Need SMM and paid ads for a SaaS product. "
+                        "Budget is ready, launch in two weeks."
+                    ),
+                    "source": "swagger_demo",
+                    "utm": {
+                        "utm_source": "docs",
+                        "utm_campaign": "test_lead",
+                    },
+                }
+            ]
+        }
+    )
+
+    name: str | None = Field(default=None, examples=["Ivan Petrov"])
+    email: str | None = Field(default=None, examples=["ivan.petrov@acme.io"])
+    phone: str | None = Field(default=None, examples=["+38 (067) 123-45-67"])
+    company: str | None = Field(default=None, examples=["Acme UA"])
+    message: str = Field(
+        examples=[
+            "Need SMM and paid ads for a SaaS product. Budget is ready, launch in two weeks."
+        ]
+    )
+    source: str = Field(default="landing", examples=["swagger_demo"])
     utm: dict[str, str] | None = None
 
     @field_validator("email", mode="before")

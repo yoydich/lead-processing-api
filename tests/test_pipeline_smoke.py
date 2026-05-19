@@ -1,9 +1,14 @@
 import os
+import json
+from uuid import uuid4
+
 os.environ["DATABASE_URL"] = "sqlite:///./test_leads.db"
 
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
+from app.db import SessionLocal
+from app.models import Lead
 
 
 @pytest.fixture(scope="module")
@@ -20,9 +25,10 @@ def test_health(client):
 
 
 def test_post_lead_accepted(client):
+    unique_email = f"ivan-{uuid4().hex}@test.com"
     resp = client.post("/api/leads", json={
         "name": "Ivan Petrov",
-        "email": "ivan@test.com",
+        "email": unique_email,
         "phone": "0671234567",
         "message": "We want SMM services for our startup",
         "source": "test",
@@ -47,6 +53,42 @@ def test_debug_leads_returns_list(client):
     resp = client.get("/debug/leads?limit=5")
     assert resp.status_code == 200
     assert isinstance(resp.json(), list)
+
+
+def test_openapi_has_lead_examples(client):
+    resp = client.get("/openapi.json")
+    assert resp.status_code == 200
+    body_schema = resp.json()["paths"]["/api/leads"]["post"]["requestBody"]
+    examples = body_schema["content"]["application/json"]["examples"]
+    assert "hot_lead" in examples
+    assert examples["hot_lead"]["value"]["source"] == "swagger_demo"
+
+
+def test_raw_payload_is_preserved_before_normalization(client):
+    raw_name = "  iVAN   PETROV  "
+    raw_email = f" RAW-{uuid4().hex}@Example.COM "
+    payload = {
+        "name": raw_name,
+        "email": raw_email,
+        "phone": "+38 (067) 123-45-67",
+        "message": "Need ads audit",
+        "source": "raw-test",
+    }
+
+    resp = client.post("/api/leads", json=payload)
+    assert resp.status_code == 202
+    lead_id = resp.json()["id"]
+
+    with SessionLocal() as db:
+        db_lead = db.get(Lead, lead_id)
+        assert db_lead is not None
+        raw_payload = json.loads(db_lead.raw_payload_json)
+        normalized_payload = json.loads(db_lead.normalized_payload_json)
+
+    assert raw_payload["name"] == raw_name
+    assert raw_payload["email"] == raw_email
+    assert normalized_payload["name"] == "Ivan Petrov"
+    assert normalized_payload["email"] == raw_email.strip().lower()
 
 
 def test_deduplication(client):

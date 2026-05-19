@@ -1,11 +1,11 @@
 import json
 import logging
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import FastAPI, Depends, BackgroundTasks, Query, Request
+from fastapi import FastAPI, Depends, BackgroundTasks, Body, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import and_
@@ -24,6 +24,45 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+LEAD_OPENAPI_EXAMPLES = {
+    "hot_lead": {
+        "summary": "Hot SaaS lead",
+        "description": "Ready-to-buy lead with contact data, budget signal, and deadline.",
+        "value": {
+            "name": "Ivan Petrov",
+            "email": "ivan.petrov@acme.io",
+            "phone": "+38 (067) 123-45-67",
+            "company": "Acme UA",
+            "message": (
+                "Need SMM and paid ads for a SaaS product. "
+                "Budget is ready, launch in two weeks."
+            ),
+            "source": "swagger_demo",
+            "utm": {"utm_source": "docs", "utm_campaign": "test_lead"},
+        },
+    },
+    "minimal_lead": {
+        "summary": "Minimal lead",
+        "description": "Only the required message field.",
+        "value": {
+            "message": "Interested in advertising. Please contact me.",
+            "source": "swagger_demo",
+        },
+    },
+    "junk_test": {
+        "summary": "Junk/test lead",
+        "description": "Expected to be classified as junk by the AI step.",
+        "value": {
+            "name": "test",
+            "email": "test@test.com",
+            "phone": "000",
+            "company": "test",
+            "message": "test 123 asdfgh",
+            "source": "swagger_demo",
+        },
+    },
+}
 
 
 @asynccontextmanager
@@ -60,7 +99,11 @@ def leads_page(
 
 @app.post("/api/leads", response_model=LeadOut, status_code=202)
 async def create_lead(
-    lead: LeadIn,
+    request: Request,
+    lead: Annotated[
+        LeadIn,
+        Body(openapi_examples=LEAD_OPENAPI_EXAMPLES),
+    ],
     background_tasks: BackgroundTasks,
     db: Annotated[Session, Depends(get_db)],
 ):
@@ -73,7 +116,7 @@ async def create_lead(
     Deduplication: same email+phone+message[:100] within 24 hours → returns existing id.
     """
     # ── Deduplication ─────────────────────────────────────────────────────
-    cutoff = datetime.utcnow() - timedelta(hours=24)
+    cutoff = datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=24)
     filters = [Lead.created_at > cutoff]
     if lead.email:
         filters.append(Lead.email == lead.email)
@@ -94,10 +137,15 @@ async def create_lead(
             )
 
     # ── Save raw lead to DB immediately ───────────────────────────────────
+    try:
+        raw_payload = await request.json()
+    except Exception:
+        raw_payload = lead.model_dump()
+
     db_lead = Lead(
         source=lead.source,
         processing_status="pending",
-        raw_payload_json=json.dumps(lead.model_dump(), ensure_ascii=False),
+        raw_payload_json=json.dumps(raw_payload, ensure_ascii=False),
         message=lead.message,
     )
     db.add(db_lead)

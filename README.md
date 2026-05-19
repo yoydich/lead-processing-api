@@ -350,7 +350,7 @@ pytest tests/ -v
 | `OPENROUTER_MODEL` | — | Модель (за замовч. `openrouter/owl-alpha`) |
 | `TELEGRAM_BOT_TOKEN` | ✅ | Токен Telegram-бота |
 | `TELEGRAM_CHAT_ID` | ✅ | ID чату/каналу для сповіщень |
-| `DATABASE_URL` | — | SQLite за замовч., для prod — PostgreSQL |
+| `DATABASE_URL` | ✅ prod | SQLite локально, PostgreSQL обов'язково на Railway |
 
 ### .env.example
 
@@ -362,6 +362,8 @@ TELEGRAM_CHAT_ID=123456789
 DATABASE_URL=sqlite:///./leads.db
 ```
 
+> На Railway не використовуйте SQLite для production: файловий диск сервісу ефемерний, тому `leads.db` може зникати після redeploy/restart. Додайте Railway PostgreSQL і передайте його `DATABASE_URL` у веб-сервіс.
+
 ---
 
 ## Деплой на Railway
@@ -369,8 +371,9 @@ DATABASE_URL=sqlite:///./leads.db
 1. Push проєкт на GitHub
 2. [railway.app](https://railway.app) → **New Project → Deploy from GitHub**
 3. Обери репозиторій — Railway автоматично знаходить `Procfile`
-4. **Variables** → додай 4 env vars з таблиці вище
-5. Deploy → отримай публічний URL
+4. Додай Railway PostgreSQL service і переконайся, що веб-сервіс має `DATABASE_URL`
+5. **Variables** → додай OpenRouter і Telegram env vars з таблиці вище
+6. Deploy → отримай публічний URL
 
 Кожен push до `master` → автоматичний редеплой.
 
