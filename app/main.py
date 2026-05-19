@@ -46,7 +46,7 @@ app = FastAPI(
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request, "index.html")
 
 
 @app.get("/leads", response_class=HTMLResponse, include_in_schema=False)
@@ -55,7 +55,7 @@ def leads_page(
     db: Annotated[Session, Depends(get_db)] = None,
 ):
     leads = db.query(Lead).order_by(Lead.created_at.desc()).limit(50).all()
-    return templates.TemplateResponse("leads.html", {"request": request, "leads": leads})
+    return templates.TemplateResponse(request, "leads.html", {"leads": leads})
 
 
 @app.post("/api/leads", response_model=LeadOut, status_code=202)
