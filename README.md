@@ -15,10 +15,11 @@
 ## Скріншоти
 
 ### Лендінг — форма прийому заявок
-![Landing Page](docs/screenshots/landing.png)
+![Landing Page](docs/screenshots/landing1.png)
 
 ### Панель лідів — результати AI в реальному часі
-![Leads Dashboard](docs/screenshots/dashboard.png)
+![Leads Dashboard](docs/screenshots/landing2.jpg)
+![Leads Dashboard](docs/screenshots/dashboard.jpg)
 
 > Дашборд оновлюється кожні 10 секунд. Видно як messy-інпут `  мАРІЯ сИДОРЕНКО  ` автоматично нормалізувався до `Марія Сидоренко`, а спам-бот отримав `junk` з впевненістю 99%.
 
