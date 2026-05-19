@@ -35,3 +35,25 @@ class Lead(Base):
     # Notification
     telegram_sent = Column(Boolean, default=False)
     telegram_error = Column(String)
+
+
+class TelegramSubscriber(Base):
+    __tablename__ = "telegram_subscribers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    chat_id = Column(String, unique=True, nullable=False, index=True)
+    username = Column(String)
+    first_name = Column(String)
+    last_name = Column(String)
+    chat_type = Column(String)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(
+        DateTime,
+        default=lambda: datetime.now(UTC).replace(tzinfo=None),
+        index=True,
+    )
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(UTC).replace(tzinfo=None),
+        nullable=False,
+    )

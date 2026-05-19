@@ -23,6 +23,7 @@ from .db import (
 from .models import Lead
 from .schemas import LeadIn, LeadOut, LeadDebug
 from .services.lead_pipeline import process_lead_pipeline
+from .telegram import handle_telegram_update, list_active_subscribers
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
@@ -196,6 +197,45 @@ def get_leads(
         )
         for l in leads
     ]
+
+
+@app.post("/api/telegram/webhook", include_in_schema=False)
+async def telegram_webhook(
+    update: dict,
+    db: Annotated[Session, Depends(get_db)],
+):
+    """
+    Telegram Bot API webhook.
+
+    Users subscribe by sending /start to the bot. Their chat_id is stored in DB,
+    so lead notifications are broadcast to all active subscribers instead of a
+    single TELEGRAM_CHAT_ID.
+    """
+    return handle_telegram_update(update, db)
+
+
+@app.get("/debug/telegram/subscribers", include_in_schema=False)
+def telegram_subscribers(
+    db: Annotated[Session, Depends(get_db)],
+):
+    subscribers = list_active_subscribers(db)
+    return {
+        "active_count": len(subscribers),
+        "subscribers": [
+            {
+                "chat_id": subscriber.chat_id,
+                "username": subscriber.username,
+                "first_name": subscriber.first_name,
+                "chat_type": subscriber.chat_type,
+                "created_at": (
+                    subscriber.created_at.isoformat()
+                    if subscriber.created_at
+                    else None
+                ),
+            }
+            for subscriber in subscribers
+        ],
+    }
 
 
 @app.get("/health")

@@ -237,7 +237,7 @@ erDiagram
 | Валідація | Pydantic v2 | Normalize on ingestion, schema validation |
 | База даних | SQLAlchemy 2 + PostgreSQL / SQLite | PostgreSQL у production на Railway, SQLite для локального запуску |
 | AI | OpenRouter (owl-alpha) | Аналіз та класифікація лідів |
-| Сповіщення | Telegram Bot API + httpx | Push до менеджера |
+| Сповіщення | Telegram Bot API + httpx | Push до Telegram-підписників |
 | Шаблони | Jinja2 | SSR-дашборд і лендінг |
 | Deploy | Railway | Auto-deploy з GitHub, env vars |
 | Тести | pytest + FastAPI TestClient | Unit + smoke tests |
@@ -349,7 +349,6 @@ pytest tests/ -v
 | `OPENROUTER_API_KEY` | ✅ | API-ключ OpenRouter |
 | `OPENROUTER_MODEL` | — | Модель (за замовч. `openrouter/owl-alpha`) |
 | `TELEGRAM_BOT_TOKEN` | ✅ | Токен Telegram-бота |
-| `TELEGRAM_CHAT_ID` | ✅ | ID чату/каналу для сповіщень |
 | `DATABASE_URL` | ✅ prod | SQLite локально, PostgreSQL обов'язково на Railway |
 
 ### .env.example
@@ -358,9 +357,24 @@ pytest tests/ -v
 OPENROUTER_API_KEY=sk-or-...
 OPENROUTER_MODEL=openrouter/owl-alpha
 TELEGRAM_BOT_TOKEN=123456789:AAF...
-TELEGRAM_CHAT_ID=123456789
 DATABASE_URL=sqlite:///./leads.db
 ```
+
+### Telegram webhook
+
+`TELEGRAM_CHAT_ID` is not required. Any Telegram user can subscribe to lead notifications by opening the bot and sending `/start`. The application stores subscriber `chat_id` values in PostgreSQL and broadcasts new leads to all active subscribers.
+
+After deploy, register the webhook once:
+
+```bash
+curl "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/setWebhook?url=https://web-production-82e68.up.railway.app/api/telegram/webhook"
+```
+
+Useful bot commands:
+
+- `/start` or `/subscribe` - subscribe this chat
+- `/stop` or `/unsubscribe` - unsubscribe this chat
+- `/status` - show active subscriber count
 
 > На Railway не використовуйте SQLite для production: файловий диск сервісу ефемерний, тому `leads.db` може зникати після redeploy/restart. Додайте Railway PostgreSQL і передайте його `DATABASE_URL` у веб-сервіс.
 

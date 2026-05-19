@@ -8,7 +8,8 @@ import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 from app.db import SessionLocal
-from app.models import Lead
+from app.models import Lead, TelegramSubscriber
+import app.telegram as telegram
 
 
 @pytest.fixture(scope="module")
@@ -110,3 +111,94 @@ def test_deduplication(client):
     assert resp2.status_code == 202
     assert resp1.json()["id"] == resp2.json()["id"]
     assert resp2.json()["status"] == "duplicate"
+
+
+def test_telegram_webhook_subscribes_chat(client):
+    chat_id = f"tg-{uuid4().hex}"
+    resp = client.post("/api/telegram/webhook", json={
+        "update_id": 1001,
+        "message": {
+            "message_id": 1,
+            "text": "/start",
+            "chat": {"id": chat_id, "type": "private"},
+            "from": {
+                "id": chat_id,
+                "is_bot": False,
+                "first_name": "Test",
+                "username": "leadtester",
+            },
+        },
+    })
+
+    assert resp.status_code == 200
+    assert resp.json()["action"] == "subscribed"
+
+    with SessionLocal() as db:
+        subscriber = (
+            db.query(TelegramSubscriber)
+            .filter(TelegramSubscriber.chat_id == chat_id)
+            .first()
+        )
+        assert subscriber is not None
+        assert subscriber.is_active is True
+        assert subscriber.username == "leadtester"
+
+
+def test_telegram_notification_broadcasts_to_subscribers(monkeypatch, client):
+    chat_id = f"tg-{uuid4().hex}"
+    with SessionLocal() as db:
+        db.add(TelegramSubscriber(chat_id=chat_id, is_active=True))
+        db.commit()
+
+    sent_messages = []
+
+    def fake_send_message(chat_id, text):
+        sent_messages.append((chat_id, text))
+        return True, None
+
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "test-token")
+    monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
+    monkeypatch.setattr(telegram, "_send_message", fake_send_message)
+
+    sent, error = telegram.send_telegram_notification({
+        "id": 1,
+        "name": "Ivan Petrov",
+        "message": "Need ads",
+        "lead_class": "hot",
+        "lead_confidence": 95,
+        "ai_summary": "Hot lead",
+        "reasoning_tags": ["budget"],
+    })
+
+    assert sent is True
+    assert error is None
+    assert any(message[0] == chat_id for message in sent_messages)
+
+
+def test_telegram_webhook_unsubscribes_chat(client):
+    chat_id = f"tg-{uuid4().hex}"
+    with SessionLocal() as db:
+        db.add(TelegramSubscriber(chat_id=chat_id, is_active=True))
+        db.commit()
+
+    resp = client.post("/api/telegram/webhook", json={
+        "update_id": 1002,
+        "message": {
+            "message_id": 1,
+            "text": "/stop",
+            "chat": {"id": chat_id, "type": "private"},
+            "from": {"id": chat_id, "is_bot": False},
+        },
+    })
+
+    assert resp.status_code == 200
+    assert resp.json()["action"] == "unsubscribed"
+
+    with SessionLocal() as db:
+        subscriber = (
+            db.query(TelegramSubscriber)
+            .filter(TelegramSubscriber.chat_id == chat_id)
+            .first()
+        )
+        assert subscriber is not None
+        assert subscriber.is_active is False
