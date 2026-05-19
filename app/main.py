@@ -11,7 +11,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
-from .db import engine, get_db, Base
+from .db import engine, get_db, Base, database_backend, is_persistent_database
 from .models import Lead
 from .schemas import LeadIn, LeadOut, LeadDebug
 from .services.lead_pipeline import process_lead_pipeline
@@ -192,4 +192,12 @@ def get_leads(
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "lead-processing-mvp", "version": "1.0.0"}
+    return {
+        "status": "ok",
+        "service": "lead-processing-mvp",
+        "version": "1.0.0",
+        "database": {
+            "backend": database_backend(),
+            "persistent": is_persistent_database(),
+        },
+    }
