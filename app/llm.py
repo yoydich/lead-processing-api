@@ -1,4 +1,5 @@
 import os
+import json
 import logging
 from openai import OpenAI
 from .schemas import LeadIn, LeadAIResult
@@ -16,15 +17,27 @@ SYSTEM_PROMPT = """Ти асистент маркетингового агент
 
 Summary: 1-2 конкретні речення — хто лід, що хоче, чому цікавий або не цікавий.
 Не пиши "Лід X запитує про..." — описуй суть фактично.
-"""
+
+Відповідай ТІЛЬКИ валідним JSON без markdown та коментарів:
+{
+  "summary": "...",
+  "lead_class": "hot|warm|cold|junk|manual_review",
+  "confidence": 0-100,
+  "missing_fields": [],
+  "reasoning_tags": []
+}"""
 
 
 def analyze_lead(lead: LeadIn) -> LeadAIResult:
     """
-    Call OpenAI with Structured Outputs to analyze and classify a lead.
+    Call OpenRouter (OpenAI-compatible) to analyze and classify a lead.
+    Uses Chat Completions with JSON mode — works with any OpenRouter model.
     Falls back to manual_review on any error.
     """
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+    )
 
     user_content = (
         f"Ім'я: {lead.name or '—'}\n"
@@ -37,16 +50,19 @@ def analyze_lead(lead: LeadIn) -> LeadAIResult:
     )
 
     try:
-        # openai v2: Responses API with Structured Outputs
-        response = client.responses.parse(
-            model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-            instructions=SYSTEM_PROMPT,
-            input=[{"role": "user", "content": user_content}],
-            text_format=LeadAIResult,
+        response = client.chat.completions.create(
+            model=os.getenv("OPENROUTER_MODEL", "openrouter/owl-alpha"),
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_content},
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.2,
         )
-        result = response.output_parsed
-        if result is None:
-            raise ValueError("OpenAI returned null parsed result")
+        content = response.choices[0].message.content or ""
+        # Strip accidental markdown fences if model adds them
+        content = content.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        result = LeadAIResult.model_validate_json(content)
         return result
 
     except Exception as e:
