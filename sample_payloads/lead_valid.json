@@ -1,0 +1,13 @@
+{
+  "name": "Ivan Petrov",
+  "email": " Ivan.Petrov@Acme.io ",
+  "phone": "+38 (067) 123-45-67",
+  "company": "Acme UA",
+  "message": "Хочемо замовити SMM та таргетовану рекламу для нашого SaaS-продукту. Зараз маємо ~15 тис. користувачів, хочемо вийти на B2B-сегмент. Готові стартувати в найближчі 2 тижні, бюджет обговорюваний.",
+  "source": "landing_v2",
+  "utm": {
+    "utm_source": "google",
+    "utm_campaign": "demo_request",
+    "utm_medium": "cpc"
+  }
+}
