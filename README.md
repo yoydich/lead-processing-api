@@ -58,7 +58,7 @@ graph TB
     subgraph "FastAPI Service (Railway)"
         A["POST /api/leads<br/>202 Accepted"]
         DED["Дедублікація<br/>(24 год вікно)"]
-        RAW["Збереження raw<br/>payload → SQLite"]
+        RAW["Збереження raw<br/>payload → DB"]
         BG["BackgroundTask<br/>lead_pipeline()"]
 
         subgraph Pipeline
@@ -72,7 +72,7 @@ graph TB
     end
 
     subgraph "Зберігання"
-        DB[("SQLite<br/>leads.db")]
+        DB[("PostgreSQL на Railway<br/>SQLite локально")]
     end
 
     subgraph "Виходи"
@@ -101,7 +101,7 @@ graph TB
 sequenceDiagram
     participant U as 👤 Користувач
     participant API as ⚡ FastAPI
-    participant DB as 🗄 SQLite
+    participant DB as 🗄 PostgreSQL / SQLite
     participant LLM as 🤖 OpenRouter
     participant TG as 📱 Telegram
 
@@ -235,7 +235,7 @@ erDiagram
 |-----|-----------|------|
 | Web framework | FastAPI 0.136 | HTTP routes, BackgroundTasks, lifespan |
 | Валідація | Pydantic v2 | Normalize on ingestion, schema validation |
-| База даних | SQLAlchemy 2 + SQLite | ORM, зберігання всіх даних |
+| База даних | SQLAlchemy 2 + PostgreSQL / SQLite | PostgreSQL у production на Railway, SQLite для локального запуску |
 | AI | OpenRouter (owl-alpha) | Аналіз та класифікація лідів |
 | Сповіщення | Telegram Bot API + httpx | Push до менеджера |
 | Шаблони | Jinja2 | SSR-дашборд і лендінг |
