@@ -1,0 +1,12 @@
+{
+  "name": "  іВАН пЕТРОВ  ",
+  "email": "  IVAN.Petrov@Gmail.COM  ",
+  "phone": "+38 (067) 123-45-67",
+  "company": "  acme ua ltd  ",
+  "message": "Хочемо замовити контекстну рекламу Google Ads. Є інтернет-магазин електроніки, ~500 SKU. Бюджет поки не визначили, але готові обговорити.",
+  "source": "google",
+  "utm": {
+    "utm_source": "google",
+    "utm_campaign": "brand"
+  }
+}

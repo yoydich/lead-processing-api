@@ -2,9 +2,12 @@ import json
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, UTC
+from pathlib import Path
 from typing import Annotated
 
-from fastapi import FastAPI, Depends, BackgroundTasks, Query
+from fastapi import FastAPI, Depends, BackgroundTasks, Query, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
@@ -12,6 +15,9 @@ from .db import engine, get_db, Base
 from .models import Lead
 from .schemas import LeadIn, LeadOut, LeadDebug
 from .services.lead_pipeline import process_lead_pipeline
+
+TEMPLATES_DIR = Path(__file__).parent / "templates"
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 logging.basicConfig(
     level=logging.INFO,
@@ -36,6 +42,20 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+def index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.get("/leads", response_class=HTMLResponse, include_in_schema=False)
+def leads_page(
+    request: Request,
+    db: Annotated[Session, Depends(get_db)] = None,
+):
+    leads = db.query(Lead).order_by(Lead.created_at.desc()).limit(50).all()
+    return templates.TemplateResponse("leads.html", {"request": request, "leads": leads})
 
 
 @app.post("/api/leads", response_model=LeadOut, status_code=202)

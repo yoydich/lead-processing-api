@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Digital Growth Agency</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #09090b;
+      --surface: #18181b;
+      --border: #27272a;
+      --accent: #6d28d9;
+      --accent-hover: #7c3aed;
+      --accent-glow: rgba(109,40,217,0.35);
+      --text: #fafafa;
+      --muted: #a1a1aa;
+      --success: #22c55e;
+      --error: #ef4444;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0;
+      background: rgba(9,9,11,0.85);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+    .logo { font-weight: 800; font-size: 1.2rem; letter-spacing: -0.5px; }
+    .logo span { color: var(--accent); }
+    nav a {
+      color: var(--muted); text-decoration: none; font-size: 0.9rem;
+      transition: color .2s;
+    }
+    nav a:hover { color: var(--text); }
+
+    /* ── HERO ── */
+    .hero {
+      max-width: 1100px; margin: 0 auto;
+      padding: 100px 40px 80px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+    @media(max-width:768px){
+      .hero { grid-template-columns:1fr; padding: 60px 24px; gap: 48px; }
+    }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(109,40,217,0.15);
+      border: 1px solid rgba(109,40,217,0.4);
+      color: #a78bfa; border-radius: 100px;
+      padding: 4px 14px; font-size: 0.78rem; font-weight: 600;
+      margin-bottom: 24px; letter-spacing: 0.3px;
+    }
+    .badge::before { content: '●'; font-size: 0.5rem; color: #22c55e; }
+
+    h1 {
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 800; line-height: 1.15;
+      letter-spacing: -1.5px; margin-bottom: 20px;
+    }
+    h1 em { font-style: normal; color: var(--accent); }
+
+    .subtitle {
+      color: var(--muted); font-size: 1.05rem;
+      line-height: 1.7; margin-bottom: 36px;
+    }
+
+    .stats {
+      display: flex; gap: 32px; flex-wrap: wrap;
+    }
+    .stat { }
+    .stat-value { font-size: 1.6rem; font-weight: 800; color: var(--text); }
+    .stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── FORM CARD ── */
+    .form-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px;
+      box-shadow: 0 0 80px var(--accent-glow);
+    }
+    .form-card h2 {
+      font-size: 1.25rem; font-weight: 700; margin-bottom: 6px;
+    }
+    .form-card p {
+      color: var(--muted); font-size: 0.88rem; margin-bottom: 28px;
+    }
+
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block; font-size: 0.8rem; font-weight: 600;
+      color: var(--muted); margin-bottom: 6px; text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .field input, .field textarea, .field select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-family: inherit; font-size: 0.95rem;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .field input:focus, .field textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(109,40,217,0.2);
+    }
+    .field textarea { resize: vertical; min-height: 90px; }
+
+    .fields-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media(max-width:480px){ .fields-row { grid-template-columns: 1fr; } }
+
+    .btn {
+      width: 100%; padding: 13px;
+      background: var(--accent);
+      color: #fff; font-family: inherit;
+      font-size: 1rem; font-weight: 700;
+      border: none; border-radius: 10px;
+      cursor: pointer; margin-top: 8px;
+      transition: background .2s, transform .1s, box-shadow .2s;
+    }
+    .btn:hover { background: var(--accent-hover); box-shadow: 0 4px 20px var(--accent-glow); }
+    .btn:active { transform: scale(0.99); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── TOAST ── */
+    #toast {
+      display: none;
+      margin-top: 16px;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-size: 0.9rem; font-weight: 500;
+      text-align: center;
+    }
+    #toast.success {
+      background: rgba(34,197,94,0.12);
+      border: 1px solid rgba(34,197,94,0.35);
+      color: #86efac;
+    }
+    #toast.error {
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.35);
+      color: #fca5a5;
+    }
+
+    /* ── FEATURES ── */
+    .features {
+      max-width: 1100px; margin: 0 auto;
+      padding: 0 40px 100px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    @media(max-width:768px){ .features { grid-template-columns:1fr; padding: 0 24px 60px; } }
+
+    .feature {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+    }
+    .feature-icon { font-size: 1.6rem; margin-bottom: 12px; }
+    .feature h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; }
+    .feature p { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── PIPELINE ── */
+    .pipeline {
+      max-width: 1100px; margin: 0 auto;
+      padding: 0 40px 100px;
+      text-align: center;
+    }
+    .pipeline h2 { font-size: 1.8rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.5px; }
+    .pipeline .sub { color: var(--muted); margin-bottom: 48px; }
+    .steps {
+      display: flex; align-items: center; justify-content: center;
+      flex-wrap: wrap; gap: 0;
+    }
+    .step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-size: 0.85rem; font-weight: 600;
+      white-space: nowrap;
+    }
+    .step span { display: block; font-size: 1.2rem; margin-bottom: 4px; }
+    .arrow { color: var(--accent); font-size: 1.2rem; padding: 0 8px; }
+    @media(max-width:768px){ .arrow { display:none; } .steps { gap: 10px; } }
+
+    footer {
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 24px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Digital<span>Growth</span></div>
+  <a href="/leads">📊 Панель лідів →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div>
+    <div class="badge">AI-powered lead processing</div>
+    <h1>Ростіть бізнес<br/>з <em>розумною</em><br/>рекламою</h1>
+    <p class="subtitle">
+      Маркетингове агентство повного циклу. SMM, таргет, Google Ads,
+      контент-маркетинг. Ваша заявка обробляється AI — відповідь протягом 2 годин.
+    </p>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value">150+</div>
+        <div class="stat-label">Клієнтів</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">3.8×</div>
+        <div class="stat-label">Середній ROAS</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">2 год</div>
+        <div class="stat-label">Час відповіді</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <div class="form-card">
+    <h2>Залишити заявку</h2>
+    <p>Заповніть форму — AI проаналізує ваш запит і менеджер зв'яжеться з вами.</p>
+
+    <form id="leadForm">
+      <div class="fields-row">
+        <div class="field">
+          <label>Ім'я</label>
+          <input type="text" name="name" placeholder="Іван Петренко"/>
+        </div>
+        <div class="field">
+          <label>Телефон</label>
+          <input type="text" name="phone" placeholder="+38 (067) 000-00-00"/>
+        </div>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" name="email" placeholder="ivan@company.ua"/>
+      </div>
+      <div class="field">
+        <label>Компанія</label>
+        <input type="text" name="company" placeholder="Назва компанії"/>
+      </div>
+      <div class="field">
+        <label>Що вас цікавить? <span style="color:#ef4444">*</span></label>
+        <textarea name="message" placeholder="Розкажіть про ваш бізнес та що хочете досягти..." required></textarea>
+      </div>
+      <input type="hidden" name="source" value="landing"/>
+      <button type="submit" class="btn" id="submitBtn">Надіслати заявку →</button>
+      <div id="toast"></div>
+    </form>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features">
+  <div class="feature">
+    <div class="feature-icon">🎯</div>
+    <h3>Таргетована реклама</h3>
+    <p>Facebook, Instagram, TikTok. Знаходимо вашу аудиторію та масштабуємо результат.</p>
+  </div>
+  <div class="feature">
+    <div class="feature-icon">🔍</div>
+    <h3>Google Ads</h3>
+    <p>Search, Display, Shopping — від налаштування до оптимізації під ROAS.</p>
+  </div>
+  <div class="feature">
+    <div class="feature-icon">📱</div>
+    <h3>SMM & Контент</h3>
+    <p>Стратегія, контент-план, дизайн, публікації та аналітика в одному місці.</p>
+  </div>
+</section>
+
+<!-- PIPELINE -->
+<section class="pipeline">
+  <h2>Як обробляється ваша заявка</h2>
+  <p class="sub">Від форми до менеджера — повністю автоматично</p>
+  <div class="steps">
+    <div class="step"><span>📥</span>Заявка</div>
+    <div class="arrow">→</div>
+    <div class="step"><span>🔧</span>Нормалізація</div>
+    <div class="arrow">→</div>
+    <div class="step"><span>🤖</span>AI-аналіз</div>
+    <div class="arrow">→</div>
+    <div class="step"><span>🏷</span>Класифікація</div>
+    <div class="arrow">→</div>
+    <div class="step"><span>📊</span>База даних</div>
+    <div class="arrow">→</div>
+    <div class="step"><span>📱</span>Telegram</div>
+  </div>
+</section>
+
+<footer>
+  Lead Processing MVP · <a href="/docs">API Docs</a> · <a href="/leads">Панель лідів</a>
+</footer>
+
+<script>
+  document.getElementById('leadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const toast = document.getElementById('toast');
+    const form = e.target;
+
+    btn.disabled = true;
+    btn.textContent = 'Надсилаємо...';
+    toast.style.display = 'none';
+
+    const data = {};
+    new FormData(form).forEach((v, k) => { if (v.trim()) data[k] = v.trim(); });
+
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+
+      if (res.ok) {
+        toast.className = 'success';
+        toast.textContent = `✅ Заявку прийнято! ID: ${json.id}. Менеджер зв'яжеться з вами протягом 2 годин.`;
+        form.reset();
+      } else {
+        toast.className = 'error';
+        toast.textContent = '❌ Помилка валідації. Заповніть обов\'язкові поля.';
+      }
+    } catch {
+      toast.className = 'error';
+      toast.textContent = '❌ Помилка мережі. Спробуйте ще раз.';
+    }
+
+    toast.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Надіслати заявку →';
+  });
+</script>
+</body>
+</html>
