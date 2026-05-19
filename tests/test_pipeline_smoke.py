@@ -22,7 +22,12 @@ def test_health(client):
     resp = client.get("/health")
     assert resp.status_code == 200
     assert resp.json()["status"] == "ok"
-    assert resp.json()["database"] == {"backend": "sqlite", "persistent": False}
+    assert resp.json()["database"] == {
+        "backend": "sqlite",
+        "config_source": "env:DATABASE_URL",
+        "persistent": False,
+        "railway": False,
+    }
 
 
 def test_post_lead_accepted(client):

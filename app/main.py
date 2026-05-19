@@ -11,7 +11,15 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
-from .db import engine, get_db, Base, database_backend, is_persistent_database
+from .db import (
+    engine,
+    get_db,
+    Base,
+    database_backend,
+    database_config_source,
+    is_persistent_database,
+    is_railway_environment,
+)
 from .models import Lead
 from .schemas import LeadIn, LeadOut, LeadDebug
 from .services.lead_pipeline import process_lead_pipeline
@@ -198,6 +206,8 @@ def health():
         "version": "1.0.0",
         "database": {
             "backend": database_backend(),
+            "config_source": database_config_source(),
             "persistent": is_persistent_database(),
+            "railway": is_railway_environment(),
         },
     }

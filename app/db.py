@@ -28,11 +28,20 @@ def _build_postgres_url_from_parts() -> str | None:
     )
 
 
-raw_database_url = (
-    os.getenv("DATABASE_URL")
-    or os.getenv("DATABASE_PRIVATE_URL")
-    or _build_postgres_url_from_parts()
-)
+CONFIG_SOURCE = "default"
+raw_database_url = os.getenv("DATABASE_URL")
+
+if raw_database_url:
+    CONFIG_SOURCE = "env:DATABASE_URL"
+else:
+    raw_database_url = os.getenv("DATABASE_PRIVATE_URL")
+    if raw_database_url:
+        CONFIG_SOURCE = "env:DATABASE_PRIVATE_URL"
+    else:
+        raw_database_url = _build_postgres_url_from_parts()
+        if raw_database_url:
+            CONFIG_SOURCE = "env:PGPARTS"
+
 is_railway = bool(os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY_PROJECT_ID"))
 
 if is_railway and not raw_database_url:
@@ -74,6 +83,14 @@ def database_backend() -> str:
 
 def is_persistent_database() -> bool:
     return database_backend() != "sqlite"
+
+
+def database_config_source() -> str:
+    return CONFIG_SOURCE
+
+
+def is_railway_environment() -> bool:
+    return is_railway
 
 
 class Base(DeclarativeBase):
