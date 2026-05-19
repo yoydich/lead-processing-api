@@ -1,7 +1,7 @@
 import json
 import logging
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Annotated
 
@@ -73,7 +73,7 @@ async def create_lead(
     Deduplication: same email+phone+message[:100] within 24 hours → returns existing id.
     """
     # ── Deduplication ─────────────────────────────────────────────────────
-    cutoff = datetime.now(UTC) - timedelta(hours=24)
+    cutoff = datetime.utcnow() - timedelta(hours=24)
     filters = [Lead.created_at > cutoff]
     if lead.email:
         filters.append(Lead.email == lead.email)

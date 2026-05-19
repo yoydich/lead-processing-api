@@ -1,4 +1,4 @@
-from datetime import datetime, UTC
+from datetime import datetime
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
 from .db import Base
 
@@ -7,7 +7,7 @@ class Lead(Base):
     __tablename__ = "leads"
 
     id = Column(Integer, primary_key=True, index=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
     source = Column(String, default="landing")
     processing_status = Column(String, default="pending")  # pending/processing/done/error
 
